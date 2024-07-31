@@ -132,7 +132,7 @@ def schema_list(schema):
                 hx_confirm="Are you sure you want to delete this field?",
             ), 
             cls="my-2",
-            id=f"field-{field["name"]}") for field in schema]
+            id=f"field-{field['name']}") for field in schema]
     )
     
 def footer(): 
