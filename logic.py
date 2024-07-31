@@ -21,6 +21,10 @@ def create_dynamic_model(fields: List[Dict[str, Any]]):
         name = field['name']
         field_type = field['field_type']
         
+        # validation to ensure no arbitrary code can be executed.
+        if field_type not in ['Literal', 'str', 'int', 'float', 'bool', 'List[str]', 'List[int]']:
+            raise ValueError(f"Invalid field type '{field_type}' for field '{name}'")
+        
         # Handle Literal type
         if isinstance(field_type, str) and field_type.startswith('Literal['):
             # Parse the Literal values

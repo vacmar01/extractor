@@ -1,3 +1,4 @@
+import uuid
 from fasthtml.common import *
 
 from components import submit_button, schema_form, schema_list, copy_button, footer, hero
@@ -18,12 +19,15 @@ custom_style = Style("""
 
 bootstrap = Link(href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css', rel='stylesheet', integrity='sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC', crossorigin='anonymous')
 
-app, rt = fast_app(pico=False, live=False, hdrs=(bootstrap, custom_style), debug=True)
-
-json_schema = []
+app, rt = fast_app(pico=False, live=False, hdrs=(bootstrap, custom_style))
 
 @rt('/')
-def get():
+def get(session):
+    if 'json_schema' not in session:
+        session['json_schema'] = []
+        
+    json_schema = session['json_schema']
+    
     return Div(
         hero(),
         # H1("Extraction Tool"),
@@ -70,7 +74,18 @@ def get():
 
 @rt('/extract')
 def post(text: str):
-    ReturnModel = create_dynamic_model(json_schema)
+    try:
+        ReturnModel = create_dynamic_model(json_schema)
+    except Exception as e:
+        return Div(
+            Div(
+                Div(H4("Error", cls='card-title'), copy_button(), cls="d-flex justify-content-between"),
+                P(str(e), cls='card-text'),
+                cls='card-body'
+            ),
+            cls='card'
+        ), submit_button(oob=True, disabled=False)
+        
     result = extract(text, ReturnModel)
     
     outp = Div(
@@ -85,7 +100,9 @@ def post(text: str):
 
     
 @rt('/add_field')
-def post(name: str, field_type: str, options: str = None):
+def post(session, name: str, field_type: str, options: str = None):
+    
+    json_schema = session['json_schema']
     
     if field_type == "Literal":
         options = options.split(",")
@@ -99,11 +116,15 @@ def post(name: str, field_type: str, options: str = None):
     
     json_schema.append(o)
     
+    #update the session with the new schema
+    session['json_schema'] = json_schema
+    
     return H3("Current Schema"), schema_list(json_schema), Div(schema_form(), id="schema-form", hx_swap_oob="true"), submit_button(disabled=False, oob=True) 
 
 @rt('/delete/{name}')
-def delete(name: str):
-    global json_schema
+def delete(session, name: str):
+    json_schema = session['json_schema']
     json_schema = [field for field in json_schema if field['name'] != name]
+    session['json_schema'] = json_schema
 
 serve()
