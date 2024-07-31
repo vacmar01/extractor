@@ -50,8 +50,8 @@ def create_dynamic_model(fields: List[Dict[str, Any]]):
     return DynamicModel
 
 client = openai.OpenAI(
-    base_url="https://api.together.xyz/v1",
     api_key=os.getenv("TOGETHER_API_KEY"),
+    base_url="https://api.together.xyz/v1",
 )
 
 # By default, the patch function will patch the ChatCompletion.create and ChatCompletion.create methods to support the response_model parameter
