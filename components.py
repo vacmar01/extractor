@@ -126,8 +126,8 @@ def schema_list(schema):
         *[Li(
             f"{field['name']}: {field['field_type']} | ", 
             A('delete',
-                hx_delete=f"/delete/{field["name"]}",
-                target_id=f"field-{field["name"]}",
+                hx_delete=f"/delete/{field['name']}",
+                target_id=f"field-{field['name']}",
                 hx_swap="outerHTML",
                 hx_confirm="Are you sure you want to delete this field?",
             ), 
