@@ -21,7 +21,7 @@ custom_style = Style("""
 
 bootstrap = Link(href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css', rel='stylesheet', integrity='sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC', crossorigin='anonymous')
 
-app, rt = fast_app(pico=False, live=False, hdrs=(custom_style, bootstrap))
+app, rt = fast_app(pico=False, live=False, hdrs=(bootstrap, custom_style))
 
 setup_toasts_bootstrap(app)
 
@@ -42,7 +42,7 @@ def get(session):
                 P("Enter the text you want to extract information from here."),
                 Form(
                     Textarea(rows=20, style="width: 100%", id="text", cls="form-control mb-3"), 
-                    submit_button(),
+                    submit_button(disabled=(len(json_schema) == 0)),
                     Script("me().on('submit', e => { me('#submit-text').disabled=true})"),
                     hx_post='/extract',
                     hx_target='#output',
