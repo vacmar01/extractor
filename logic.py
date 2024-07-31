@@ -2,6 +2,8 @@ from pydantic import create_model, Field
 from typing import List, Dict, Any, Literal, get_args, get_origin
 import ast
 
+from components import types
+
 import openai
 import instructor
 
@@ -22,7 +24,7 @@ def create_dynamic_model(fields: List[Dict[str, Any]]):
         field_type = field['field_type']
         
         # validation to ensure no arbitrary code can be executed.
-        if field_type not in ['Literal', 'str', 'int', 'float', 'bool', 'List[str]', 'List[int]']:
+        if field_type not in [t for t,_ in types]:
             raise ValueError(f"Invalid field type '{field_type}' for field '{name}'")
         
         # Handle Literal type

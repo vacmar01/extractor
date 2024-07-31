@@ -1,7 +1,9 @@
 import uuid
 from fasthtml.common import *
 
-from components import submit_button, schema_form, schema_list, copy_button, footer, hero
+from components import submit_button, schema_form, schema_list, copy_button, footer, hero, types
+
+from custom_toaster import setup_toasts_bootstrap, add_toast
 
 from logic import create_dynamic_model, extract
 
@@ -19,10 +21,13 @@ custom_style = Style("""
 
 bootstrap = Link(href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css', rel='stylesheet', integrity='sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC', crossorigin='anonymous')
 
-app, rt = fast_app(pico=False, live=False, hdrs=(bootstrap, custom_style))
+app, rt = fast_app(pico=False, live=False, hdrs=(custom_style, bootstrap))
+
+setup_toasts_bootstrap(app)
 
 @rt('/')
 def get(session):
+    
     if 'json_schema' not in session:
         session['json_schema'] = []
         
@@ -30,8 +35,6 @@ def get(session):
     
     return Div(
         hero(),
-        # H1("Extraction Tool"),
-        # P("Enter text on the left and define the schema of the data you want to extract on the right. The tool will extract the information from the text and display it below."),
         Hr(),
         Div(
             Div(
@@ -56,6 +59,7 @@ def get(session):
                     cls="mb-3"
                 ),
                 Div(
+                    H3("Current Schema") if len(json_schema) > 0 else None,
                     schema_list(json_schema), 
                     id="schema", 
                     cls="mt-3"
@@ -73,7 +77,9 @@ def get(session):
     )
 
 @rt('/extract')
-def post(text: str):
+def post(session, text: str):
+    json_schema = session['json_schema']
+    
     try:
         ReturnModel = create_dynamic_model(json_schema)
     except Exception as e:
@@ -102,6 +108,15 @@ def post(text: str):
 @rt('/add_field')
 def post(session, name: str, field_type: str, options: str = None):
     
+    if name == "" or field_type == "":
+        add_toast(session, "Field name and type are required", "error")
+        return None
+    
+    #make sure the field type is valid
+    if field_type not in [t for t,_ in types]:
+        add_toast(session, f"Don't fuck with me!", "error")
+        return None
+    
     json_schema = session['json_schema']
     
     if field_type == "Literal":
@@ -110,6 +125,7 @@ def post(session, name: str, field_type: str, options: str = None):
         field_type = f"Literal[{options_string}]"
     
     o = {
+        "id": str(uuid.uuid4()),
         "name": name,
         "field_type": field_type
     }
@@ -119,12 +135,17 @@ def post(session, name: str, field_type: str, options: str = None):
     #update the session with the new schema
     session['json_schema'] = json_schema
     
+    if len(json_schema) == 0:
+        return Div(schema_form(), id="schema-form", hx_swap_oob="true"), submit_button(disabled=False, oob=True) 
+    
+    add_toast(session, f"'{name}' field added", "success")
+    
     return H3("Current Schema"), schema_list(json_schema), Div(schema_form(), id="schema-form", hx_swap_oob="true"), submit_button(disabled=False, oob=True) 
 
-@rt('/delete/{name}')
-def delete(session, name: str):
+@rt('/delete/{id}')
+def delete(session, id: str):
     json_schema = session['json_schema']
-    json_schema = [field for field in json_schema if field['name'] != name]
+    json_schema = [field for field in json_schema if field['id'] != id]
     session['json_schema'] = json_schema
 
 serve()

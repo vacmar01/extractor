@@ -102,7 +102,7 @@ def schema_form():
     return  Form(
                 Div(
                     Label("Field Name (only letters and '_')", fr="name"),
-                    Input(id="name", cls="form-control"),
+                    Input(id="name", cls="form-control", ),
                     cls="mb-3"
                 ),
                 Div(
@@ -126,13 +126,13 @@ def schema_list(schema):
         *[Li(
             f"{field['name']}: {field['field_type']} | ", 
             A('delete',
-                hx_delete=f"/delete/{field['name']}",
-                target_id=f"field-{field['name']}",
+                hx_delete=f"/delete/{field['id']}",
+                target_id=f"field-{field['id']}",
                 hx_swap="outerHTML",
                 hx_confirm="Are you sure you want to delete this field?",
             ), 
             cls="my-2",
-            id=f"field-{field['name']}") for field in schema]
+            id=f"field-{field['id']}") for field in schema]
     )
     
 def footer(): 
