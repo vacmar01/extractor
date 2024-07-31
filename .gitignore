@@ -1,0 +1,6 @@
+.env
+.sesskey
+*.ipynb
+fhtml_pa/*
+__pycache__/*
+data/*
