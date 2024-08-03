@@ -1,5 +1,5 @@
 from pydantic import create_model, Field
-from typing import List, Dict, Any, Literal, get_args, get_origin
+from typing import List, Dict, Any, Literal, Optional, get_args, get_origin
 import ast
 
 from components import types
@@ -13,6 +13,47 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+ALLOWED_TYPES = {
+    'str': str,
+    'int': int,
+    'float': float,
+    'bool': bool,
+    'List[str]': List[str],
+    'List[int]': List[int],
+    'List[float]': List[float],
+    'Optional[str]': Optional[str],
+    'Optional[int]': Optional[int],
+    'Optional[float]': Optional[float],
+}
+
+def parse_literal(literal_str: str):
+    # Remove 'Literal' and brackets
+    values_str = literal_str[7:-1]
+    
+    # Parse the values
+    try:
+        values = eval(values_str, {'__builtins__': {}}, {})
+    except:
+        raise ValueError(f"Invalid Literal format: {literal_str}")
+    
+    if not isinstance(values, (list, tuple)):
+        values = (values,)
+    
+    # Ensure all values are of the same type
+    value_type = type(values[0])
+    if not all(isinstance(v, value_type) for v in values):
+        raise ValueError("All values in Literal must be of the same type")
+    
+    return Literal[values]
+
+def get_field_type(type_str: str) -> Any:
+    if type_str in ALLOWED_TYPES:
+        return ALLOWED_TYPES[type_str]
+    elif type_str.startswith('Literal['):
+        return parse_literal(type_str)
+    else:
+        raise ValueError(f"Unsupported type: {type_str}")
+
 def create_dynamic_model(fields: List[Dict[str, Any]]):
     """
     Create a Pydantic model dynamically based on the provided fields.
@@ -21,30 +62,12 @@ def create_dynamic_model(fields: List[Dict[str, Any]]):
     field_definitions = {}
     for field in fields:
         name = field['name']
-        field_type = field['field_type']
+        field_type_str = field['field_type']
         
-        # validation to ensure no arbitrary code can be executed.
-        if field_type not in [t for t,_ in types]:
-            raise ValueError(f"Invalid field type '{field_type}' for field '{name}'")
-        
-        # Handle Literal type
-        if isinstance(field_type, str) and field_type.startswith('Literal['):
-            # Parse the Literal values
-            literal_values = ast.literal_eval(field_type[len('Literal['):-1])
-            
-            if not isinstance(literal_values, (list, tuple)):
-                literal_values = [literal_values]
-                
-            # Determine the type of the first value to infer the Literal type
-            first_value_type = type(literal_values[0])
-            
-            if not all(isinstance(value, first_value_type) for value in literal_values):
-                raise ValueError(f"All values in Literal field '{name}' must be of type {first_value_type}")
-            
-            field_type = Literal[tuple(literal_values)]
-        elif isinstance(field_type, str):
-            # Convert other string types to actual Python type
-            field_type = eval(field_type)
+        try:
+            field_type = get_field_type(field_type_str)
+        except ValueError as e:
+            raise ValueError(f"Invalid field type for '{name}': {str(e)}")
         
         # Add any additional field parameters
         field_params = {k: v for k, v in field.items() if k not in ['name', 'type']}

@@ -43,10 +43,10 @@ def get(session):
                 Form(
                     Textarea(rows=20, style="width: 100%", id="text", cls="form-control mb-3"), 
                     submit_button(disabled=(len(json_schema) == 0)),
-                    Script("me().on('submit', e => { me('#submit-text').disabled=true})"),
                     hx_post='/extract',
                     hx_target='#output',
-                    hx_indicator="#indicator"
+                    hx_indicator="#indicator",
+                    hx_disabled_elt="find button"
                 ), 
                 cls="col-md"
             ),
@@ -110,12 +110,12 @@ def post(session, name: str, field_type: str, options: str = None):
     
     if name == "" or field_type == "":
         add_toast(session, "Field name and type are required", "error")
-        return None
+        return HttpHeader("HX-Reswap", "none")
     
     #make sure the field type is valid
     if field_type not in [t for t,_ in types]:
         add_toast(session, f"Don't fuck with me!", "error")
-        return None
+        return HttpHeader("HX-Reswap", "none")
     
     json_schema = session['json_schema']
     

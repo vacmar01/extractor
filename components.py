@@ -118,7 +118,8 @@ def schema_form():
                 Div(Input(placeholder="options (separated by comma)", id="options", cls="form-control"), cls="mb-3 d-none", id="options-wrapper"),
                 Button('Add', type='submit', cls="btn btn-primary"),
                 hx_post='/add_field',
-                target_id="schema"
+                target_id="schema",
+                hx_disabled_elt="find button"
             )
     
 def schema_list(schema):
