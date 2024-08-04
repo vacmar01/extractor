@@ -1,7 +1,7 @@
 import uuid
 from fasthtml.common import *
 
-from components import submit_button, schema_form, schema_list, copy_button, footer, hero, types
+from components import submit_button, schema_form, schema_list, copy_button, footer, hero, types, spinner
 
 from custom_toaster import setup_toasts_bootstrap, add_toast
 
@@ -42,7 +42,7 @@ def get(session):
                 P("Enter the text you want to extract information from here."),
                 Form(
                     Textarea(rows=20, style="width: 100%", id="text", cls="form-control mb-3"), 
-                    submit_button(disabled=(len(json_schema) == 0)),
+                    submit_button(spinner(), disabled=(len(json_schema) == 0)),
                     hx_post='/extract',
                     hx_target='#output',
                     hx_indicator="#indicator",
