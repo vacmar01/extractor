@@ -68,12 +68,12 @@ def clipboard_icon():
         style="width: 1rem;"
     )
 
-def spinner(): 
-    return Span(role='status', aria_hidden='true', cls='spinner-border spinner-border-sm htmx-indicator', id='indicator')
+def spinner(id="indicator"): 
+    return Span(role='status', aria_hidden='true', cls='spinner-border spinner-border-sm htmx-indicator', id=id)
 
 def submit_button(oob=False, disabled=True):
     return Button(
-        spinner(), 
+        spinner("indicator-schema"), 
         Span('Submit'), 
         type='submit', 
         cls="btn btn-primary", 
@@ -119,7 +119,8 @@ def schema_form():
                 Button(spinner(), 'Add', type='submit', cls="btn btn-primary"),
                 hx_post='/add_field',
                 target_id="schema",
-                hx_disabled_elt="find button"
+                hx_disabled_elt="find button",
+                hx_indicator="#indicator-schema",
             )
     
 def schema_list(schema):

@@ -42,10 +42,10 @@ def get(session):
                 P("Enter the text you want to extract information from here."),
                 Form(
                     Textarea(rows=20, style="width: 100%", id="text", cls="form-control mb-3"), 
-                    submit_button(spinner(), disabled=(len(json_schema) == 0)),
+                    submit_button(spinner("indicator-text"), disabled=(len(json_schema) == 0)),
                     hx_post='/extract',
                     hx_target='#output',
-                    hx_indicator="#indicator",
+                    hx_indicator="#indicator-text",
                     hx_disabled_elt="find button"
                 ), 
                 cls="col-md"
